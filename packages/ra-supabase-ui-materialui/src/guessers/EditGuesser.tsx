@@ -8,8 +8,9 @@ import {
     EditView,
     InferredElement,
     editFieldTypes,
+    DateTimeInput,
 } from 'react-admin';
-import type { EditProps, EditViewProps } from 'react-admin';
+import type { EditProps, EditViewProps, InputProps } from 'react-admin';
 import { capitalize, singularize } from 'inflection';
 
 import { inferElementFromType } from './inferElementFromType';
@@ -76,7 +77,14 @@ export const EditGuesserView = (
             .map((source: string) =>
                 inferElementFromType({
                     name: source,
-                    types: editFieldTypes,
+                    types: {
+                        ...editFieldTypes,
+                        date: {
+                            component: DateTimeInput,
+                            representation: (props: InputProps) =>
+                                `<DateTimeInput source="${props.source}" />`,
+                        },
+                    },
                     description:
                         resourceDefinition.properties![source].description,
                     format: resourceDefinition.properties![source].format,

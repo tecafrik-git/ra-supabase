@@ -80,6 +80,7 @@ export const inferElementFromType = ({
             return new InferredElement(types.date, {
                 source: name,
                 validate,
+                showTime: true,
                 ...props,
             });
         }
