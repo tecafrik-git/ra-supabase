@@ -8,13 +8,22 @@ import {
     ListView,
     InferredElement,
     listFieldTypes,
-    editFieldTypes,
     SearchInput,
+    SelectField,
 } from 'react-admin';
 import type { ListProps, ListViewProps } from 'react-admin';
 import { capitalize, singularize } from 'inflection';
 
 import { inferElementFromType } from './inferElementFromType';
+import { supabaseEditFieldTypes } from './EditGuesser';
+
+const supabaseListFieldTypes = {
+    ...listFieldTypes,
+    enumeration: {
+        component: SelectField,
+        representation: props => `<SelectField source="${props.source}" />`,
+    },
+};
 
 export const ListGuesser = (props: ListProps & { enableLog?: boolean }) => {
     const {
@@ -85,7 +94,7 @@ export const ListGuesserView = (
             .map((source: string) =>
                 inferElementFromType({
                     name: source,
-                    types: listFieldTypes,
+                    types: supabaseListFieldTypes,
                     description:
                         resourceDefinition.properties![source].description,
                     format: resourceDefinition.properties![source].format,
@@ -95,6 +104,7 @@ export const ListGuesserView = (
                         'string'
                         ? resourceDefinition.properties![source].type
                         : 'string') as string,
+                    propertySchema: resourceDefinition.properties![source],
                 })
             );
         const inferredTable = new InferredElement(
@@ -119,10 +129,11 @@ export const ListGuesserView = (
                 const field = resourceDefinition.properties![source];
                 return inferElementFromType({
                     name: source,
-                    types: editFieldTypes,
+                    types: supabaseEditFieldTypes,
                     description: field.description,
                     format: field.format,
                     type: field.type as string,
+                    propertySchema: field,
                 });
             });
         if (
@@ -155,6 +166,7 @@ export const ListGuesserView = (
                             value ? value.substring(0, value.length - 2) : '',
                     },
                     type: field.type as string,
+                    propertySchema: field,
                 })
             );
         }

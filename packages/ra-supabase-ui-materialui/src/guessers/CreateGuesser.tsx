@@ -14,6 +14,7 @@ import type { CreateProps, CreateViewProps, InputProps } from 'react-admin';
 import { capitalize, singularize } from 'inflection';
 
 import { inferElementFromType } from './inferElementFromType';
+import { supabaseEditFieldTypes } from './EditGuesser';
 
 export const CreateGuesser = (props: CreateProps & { enableLog?: boolean }) => {
     const {
@@ -73,14 +74,7 @@ export const CreateGuesserView = (
             .map((source: string) =>
                 inferElementFromType({
                     name: source,
-                    types: {
-                        ...editFieldTypes,
-                        date: {
-                            component: DateTimeInput,
-                            representation: (props: InputProps) =>
-                                `<DateTimeInput source="${props.source}" />`,
-                        },
-                    },
+                    types: supabaseEditFieldTypes,
                     description:
                         resourceDefinition.properties![source].description,
                     format: resourceDefinition.properties![source].format,
@@ -91,6 +85,7 @@ export const CreateGuesserView = (
                         ? resourceDefinition.properties![source].type
                         : 'string') as string,
                     requiredFields,
+                    propertySchema: resourceDefinition.properties![source],
                 })
             );
         const inferredForm = new InferredElement(

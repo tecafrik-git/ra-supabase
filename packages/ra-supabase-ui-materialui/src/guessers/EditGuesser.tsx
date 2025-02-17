@@ -9,12 +9,25 @@ import {
     InferredElement,
     editFieldTypes,
     DateTimeInput,
+    SelectInput,
 } from 'react-admin';
 import type { EditProps, EditViewProps, InputProps } from 'react-admin';
 import { capitalize, singularize } from 'inflection';
 
 import { inferElementFromType } from './inferElementFromType';
 
+export const supabaseEditFieldTypes = {
+    ...editFieldTypes,
+    date: {
+        component: DateTimeInput,
+        representation: (props: InputProps) =>
+            `<DateTimeInput source="${props.source}" />`,
+    },
+    enumeration: {
+        component: SelectInput,
+        representation: props => `<SelectInput source="${props.source}" />`,
+    },
+};
 export const EditGuesser = (props: EditProps & { enableLogs?: boolean }) => {
     const {
         resource,
@@ -78,7 +91,7 @@ export const EditGuesserView = (
                 inferElementFromType({
                     name: source,
                     types: {
-                        ...editFieldTypes,
+                        ...supabaseEditFieldTypes,
                         date: {
                             component: DateTimeInput,
                             representation: (props: InputProps) =>
@@ -95,6 +108,7 @@ export const EditGuesserView = (
                         ? resourceDefinition.properties![source].type
                         : 'string') as string,
                     requiredFields,
+                    propertySchema: resourceDefinition.properties![source],
                 })
             );
         const inferredForm = new InferredElement(

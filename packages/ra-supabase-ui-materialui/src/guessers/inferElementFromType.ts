@@ -1,6 +1,7 @@
-import { InferredElement, required } from 'react-admin';
+import { ChipField, InferredElement, required } from 'react-admin';
 import type { InferredTypeMap } from 'react-admin';
 import { pluralize } from 'inflection';
+import { IJsonSchema } from 'openapi-types';
 
 const hasType = (type, types) => typeof types[type] !== 'undefined';
 
@@ -12,6 +13,7 @@ export const inferElementFromType = ({
     requiredFields,
     types,
     props,
+    propertySchema,
 }: {
     name: string;
     types: InferredTypeMap;
@@ -20,6 +22,7 @@ export const inferElementFromType = ({
     type?: string;
     requiredFields?: string[];
     props?: any;
+    propertySchema: IJsonSchema;
 }) => {
     if (name === 'id' && hasType('id', types)) {
         return new InferredElement(types.id, { source: 'id' });
@@ -89,6 +92,17 @@ export const inferElementFromType = ({
         return new InferredElement(types.number, {
             source: name,
             validate,
+            ...props,
+        });
+    }
+    if (propertySchema.enum && types.enumeration) {
+        return new InferredElement(types.enumeration, {
+            source: name,
+            validate,
+            choices: propertySchema.enum.map(value => ({
+                id: value,
+                name: `enums.${propertySchema.format}.${value}`,
+            })),
             ...props,
         });
     }

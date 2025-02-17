@@ -8,11 +8,20 @@ import {
     ShowView,
     InferredElement,
     showFieldTypes,
+    SelectField,
 } from 'react-admin';
 import type { ShowProps, ShowViewProps } from 'react-admin';
 import { capitalize, singularize } from 'inflection';
 
 import { inferElementFromType } from './inferElementFromType';
+
+const supabaseShowFieldTypes = {
+    ...showFieldTypes,
+    enumeration: {
+        component: SelectField,
+        representation: props => `<SelectField source="${props.source}" />`,
+    },
+};
 
 export const ShowGuesser = (props: ShowProps & { enableLog?: boolean }) => {
     const { id, disableAuthentication, queryOptions, resource, ...rest } =
@@ -61,7 +70,7 @@ export const ShowGuesserView = (
             .map((source: string) =>
                 inferElementFromType({
                     name: source,
-                    types: showFieldTypes,
+                    types: supabaseShowFieldTypes,
                     description:
                         resourceDefinition.properties![source].description,
                     format: resourceDefinition.properties![source].format,
@@ -71,6 +80,7 @@ export const ShowGuesserView = (
                         'string'
                         ? resourceDefinition.properties![source].type
                         : 'string') as string,
+                    propertySchema: resourceDefinition.properties![source],
                 })
             );
         const inferredLayout = new InferredElement(
