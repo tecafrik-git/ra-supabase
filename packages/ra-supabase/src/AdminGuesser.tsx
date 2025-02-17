@@ -15,7 +15,7 @@ import {
     LoginPage,
     SetPasswordPage,
     ForgotPasswordPage,
-} from 'ra-supabase-ui-materialui';
+} from '@tecafrik/ra-supabase-ui-materialui';
 import { createClient } from '@supabase/supabase-js';
 import { defaultI18nProvider } from './defaultI18nProvider';
 
