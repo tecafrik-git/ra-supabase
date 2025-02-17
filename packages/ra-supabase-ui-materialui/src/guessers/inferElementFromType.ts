@@ -101,6 +101,7 @@ export const inferElementFromType = ({
             validate,
             choices: propertySchema.enum.map(value => ({
                 id: value,
+                // @ts-ignore
                 name: `enums.${propertySchema.format}.${value}`,
             })),
             ...props,
