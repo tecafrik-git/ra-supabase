@@ -23,7 +23,12 @@ const supabaseShowFieldTypes = {
     },
 };
 
-export const ShowGuesser = (props: ShowProps & { enableLog?: boolean }) => {
+export const ShowGuesser = (
+    props: ShowProps & {
+        enableLog?: boolean;
+        customElements?: Record<string, ReactNode>;
+    }
+) => {
     const { id, disableAuthentication, queryOptions, resource, ...rest } =
         props;
     return (
@@ -41,6 +46,7 @@ export const ShowGuesser = (props: ShowProps & { enableLog?: boolean }) => {
 export const ShowGuesserView = (
     props: ShowViewProps & {
         enableLog?: boolean;
+        customElements?: Record<string, ReactNode>;
     }
 ) => {
     const { data: schema, error, isPending } = useAPISchema();
@@ -67,8 +73,15 @@ export const ShowGuesserView = (
                 source =>
                     resourceDefinition.properties![source].format !== 'tsvector'
             )
-            .map((source: string) =>
-                inferElementFromType({
+            .map((source: string) => {
+                const customElement = props.customElements?.[source];
+                if (customElement) {
+                    return {
+                        getElement: () => customElement,
+                        getRepresentation: () => '',
+                    };
+                }
+                return inferElementFromType({
                     name: source,
                     types: supabaseShowFieldTypes,
                     description:
@@ -81,8 +94,8 @@ export const ShowGuesserView = (
                         ? resourceDefinition.properties![source].type
                         : 'string') as string,
                     propertySchema: resourceDefinition.properties![source],
-                })
-            );
+                });
+            });
         const inferredLayout = new InferredElement(
             showFieldTypes.show,
             null,
@@ -117,7 +130,7 @@ ${representation}
     </Show>
 );`
         );
-    }, [resource, isPending, error, schema, enableLog]);
+    }, [resource, isPending, error, schema, enableLog, props.customElements]);
 
     if (isPending) return <Loading />;
     if (error) return <p>Error: {error.message}</p>;

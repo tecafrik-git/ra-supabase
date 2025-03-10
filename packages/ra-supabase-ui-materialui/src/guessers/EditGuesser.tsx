@@ -28,7 +28,12 @@ export const supabaseEditFieldTypes = {
         representation: props => `<SelectInput source="${props.source}" />`,
     },
 };
-export const EditGuesser = (props: EditProps & { enableLogs?: boolean }) => {
+export const EditGuesser = (
+    props: EditProps & {
+        enableLogs?: boolean;
+        customElements?: Record<string, ReactNode>;
+    }
+) => {
     const {
         resource,
         id,
@@ -59,6 +64,7 @@ export const EditGuesser = (props: EditProps & { enableLogs?: boolean }) => {
 export const EditGuesserView = (
     props: EditViewProps & {
         enableLog?: boolean;
+        customElements?: Record<string, ReactNode>;
     }
 ) => {
     const { data: schema, error, isPending } = useAPISchema();
@@ -87,8 +93,15 @@ export const EditGuesserView = (
                 source =>
                     resourceDefinition.properties![source].format !== 'tsvector'
             )
-            .map((source: string) =>
-                inferElementFromType({
+            .map((source: string) => {
+                const customElement = props.customElements?.[source];
+                if (customElement) {
+                    return {
+                        getElement: () => customElement,
+                        getRepresentation: () => '',
+                    };
+                }
+                return inferElementFromType({
                     name: source,
                     types: {
                         ...supabaseEditFieldTypes,
@@ -109,8 +122,8 @@ export const EditGuesserView = (
                         : 'string') as string,
                     requiredFields,
                     propertySchema: resourceDefinition.properties![source],
-                })
-            );
+                });
+            });
         const inferredForm = new InferredElement(
             editFieldTypes.form,
             null,
@@ -145,7 +158,7 @@ ${representation}
     </Edit>
 );`
         );
-    }, [resource, isPending, error, schema, enableLog]);
+    }, [resource, isPending, error, schema, enableLog, props.customElements]);
 
     if (isPending) return <Loading />;
     if (error) return <p>Error: {error.message}</p>;

@@ -25,7 +25,12 @@ const supabaseListFieldTypes = {
     },
 };
 
-export const ListGuesser = (props: ListProps & { enableLog?: boolean }) => {
+export const ListGuesser = (
+    props: ListProps & {
+        enableLog?: boolean;
+        customElements?: Record<string, ReactNode>;
+    }
+) => {
     const {
         debounce,
         disableAuthentication,
@@ -62,6 +67,7 @@ export const ListGuesser = (props: ListProps & { enableLog?: boolean }) => {
 export const ListGuesserView = (
     props: ListViewProps & {
         enableLog?: boolean;
+        customElements?: Record<string, ReactNode>;
     }
 ) => {
     const { data: schema, error, isPending } = useAPISchema();
@@ -91,8 +97,15 @@ export const ListGuesserView = (
                 source =>
                     resourceDefinition.properties![source].format !== 'tsvector'
             )
-            .map((source: string) =>
-                inferElementFromType({
+            .map((source: string) => {
+                const customElement = props.customElements?.[source];
+                if (customElement) {
+                    return {
+                        getElement: () => customElement,
+                        getRepresentation: () => '',
+                    };
+                }
+                return inferElementFromType({
                     name: source,
                     types: supabaseListFieldTypes,
                     description:
@@ -105,8 +118,8 @@ export const ListGuesserView = (
                         ? resourceDefinition.properties![source].type
                         : 'string') as string,
                     propertySchema: resourceDefinition.properties![source],
-                })
-            );
+                });
+            });
         const inferredTable = new InferredElement(
             listFieldTypes.table,
             null,
@@ -218,7 +231,7 @@ ${tableRepresentation}
     </List>
 );`
         );
-    }, [resource, isPending, error, schema, enableLog]);
+    }, [resource, isPending, error, schema, enableLog, props.customElements]);
 
     if (isPending) return <Loading />;
     if (error) return <p>Error: {error.message}</p>;

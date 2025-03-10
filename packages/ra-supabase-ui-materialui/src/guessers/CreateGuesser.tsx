@@ -8,15 +8,19 @@ import {
     CreateView,
     InferredElement,
     editFieldTypes,
-    DateTimeInput,
 } from 'react-admin';
-import type { CreateProps, CreateViewProps, InputProps } from 'react-admin';
+import type { CreateProps, CreateViewProps } from 'react-admin';
 import { capitalize, singularize } from 'inflection';
 
 import { inferElementFromType } from './inferElementFromType';
 import { supabaseEditFieldTypes } from './EditGuesser';
 
-export const CreateGuesser = (props: CreateProps & { enableLog?: boolean }) => {
+export const CreateGuesser = (
+    props: CreateProps & {
+        enableLog?: boolean;
+        customElements?: Record<string, ReactNode>;
+    }
+) => {
     const {
         mutationOptions,
         resource,
@@ -43,6 +47,7 @@ export const CreateGuesser = (props: CreateProps & { enableLog?: boolean }) => {
 export const CreateGuesserView = (
     props: CreateViewProps & {
         enableLog?: boolean;
+        customElements?: Record<string, ReactNode>;
     }
 ) => {
     const { data: schema, error, isPending } = useAPISchema();
@@ -71,8 +76,15 @@ export const CreateGuesserView = (
                 source =>
                     resourceDefinition.properties![source].format !== 'tsvector'
             )
-            .map((source: string) =>
-                inferElementFromType({
+            .map((source: string) => {
+                const customElement = props.customElements?.[source];
+                if (customElement) {
+                    return {
+                        getElement: () => customElement,
+                        getRepresentation: () => '',
+                    };
+                }
+                return inferElementFromType({
                     name: source,
                     types: supabaseEditFieldTypes,
                     description:
@@ -86,8 +98,8 @@ export const CreateGuesserView = (
                         : 'string') as string,
                     requiredFields,
                     propertySchema: resourceDefinition.properties![source],
-                })
-            );
+                });
+            });
         const inferredForm = new InferredElement(
             editFieldTypes.form,
             null,
@@ -122,7 +134,7 @@ ${representation}
     </Create>
 );`
         );
-    }, [resource, isPending, error, schema, enableLog]);
+    }, [resource, isPending, error, schema, enableLog, props.customElements]);
 
     if (isPending) return <Loading />;
     if (error) return <p>Error: {error.message}</p>;
